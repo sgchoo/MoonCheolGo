@@ -1,56 +1,39 @@
-from bson import ObjectId
-from pymongo import MongoClient
-
 from flask import Flask, render_template, jsonify, request
-from flask.json.provider import JSONProvider
-
-import json
-import hashlib
-
-client = MongoClient('mongodb://test:test@43.200.176.197',27017)
-db = client.moonchul
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
+import requests
 
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017)
+db = client.dbmoonchul
 
-#####################################################################################
-# 이 부분은 코드를 건드리지 말고 그냥 두세요. 코드를 이해하지 못해도 상관없는 부분입니다.
-#
-# ObjectId 타입으로 되어있는 _id 필드는 Flask 의 jsonify 호출시 문제가 된다.
-# 이를 처리하기 위해서 기본 JsonEncoder 가 아닌 custom encoder 를 사용한다.
-# Custom encoder 는 다른 부분은 모두 기본 encoder 에 동작을 위임하고 ObjectId 타입만 직접 처리한다.
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
+db.moonchuls.insert_one({'subject': "짜장면vs짬뽕", 'argument': "짬뽕짜장면",
+              'position1': "짬뽕", 'position2': "짜장면"})
 
+@app.route('/')
+def home():
+    return render_template('main.html')
 
-class CustomJSONProvider(JSONProvider):
-    def dumps(self, obj, **kwargs):
-        return json.dumps(obj, **kwargs, cls=CustomJSONEncoder)
+@app.route('/main', methods=['POST'])
+def apply_moonchul():
+    subject_receive = request.form['subject_give']
+    argument_receive = request.form['argument_give']
+    position_1_receive = request.form['position_1_give']
+    position_2_receive = request.form['position_2_give']
 
-    def loads(self, s, **kwargs):
-        return json.loads(s, **kwargs)
+    moonchuls = {'subject': subject_receive, 'argument': argument_receive,
+              'position1': position_1_receive, 'position2': position_2_receive}
+    db.moonchuls.insert_one(moonchuls)
+    print(moonchuls)
 
+    return jsonify({'result': 'success'})
 
-# 위에 정의되 custom encoder 를 사용하게끔 설정한다.
-app.json = CustomJSONProvider(app)
-#####################################################################################
+@app.route('/post', methods=['GET'])
+def read_moonchuls():
+        result = list(db.moonchuls.find_one({'subject'}))
+        return jsonify({'result':'success','subjects':result})
 
-
-@app.route('/api/register', methods=['POST'])
-def apiRegister():
-    idReceive = request.form['idGive']
-    passwordReceive = request.form['passwordGive']
-    confirmPasswordReceive = request.form['confirmPasswordGive']
-
-    passwordHash = hashlib.sha256(passwordReceive.encode('utf-8')).hexdigest()
-    result = db.user.insert_one({'id':idReceive,'password':passwordHash, 'confirmPassword':confirmPasswordReceive})
-
-    if passwordReceive == confirmPasswordReceive:
-        return jsonify({'result':'success'})
-    else:
-        return jsonify({'result':'fail'})
-    
+if __name__ == '__main__':
+     app.run('0,0,0,0', port = 5000, debug = True)
