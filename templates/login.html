@@ -55,7 +55,8 @@
                         id: $('#user_id').val(),
                         pw: $('#user_pw').val(),
                         nickname: $('#usernick').val(),
-                        pw_chk: $('#user_pw_chk').val()
+                        pw_chk: $('#user_pw_chk').val(),
+                        point: 100
                     },
                     success: function (response) {
                         if (response['result'] == 'success') {
