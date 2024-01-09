@@ -11,6 +11,8 @@
 
         <!-- Bulma CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <!-- Tailwind CSS  -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
@@ -85,92 +87,44 @@
     </head>
     <body>
         <div class="section has-text-centered">
-            <h1 class="title">로그인 페이지</h1>
-            <div class="container" style="width:60%">
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="userid">ID</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="text" class="input" id="userid" aria-describedby="emailHelp"
-                                       placeholder="My ID">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="userpw">PW</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="password" class="input" id="userpw" placeholder="My Password">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <button class="button is-primary" onclick="login()">로그인</button>
-            </div>
+            <h1 class="title">LogIn</h1>
+            <div class="container" style="width:40%">
                 <div>
-                <button class="button is-primary" onclick="openclose()">회원등록</button>
+                    <label for="userid" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <input type="text" id="userid" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="My ID" required>
                 </div>
+                <div>
+                    <label for="userpw" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <input type="text" id="userpw" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="My Password" required>
+                </div>
+                <div>
+                    <button class="bg-yellow-100 hover:bg-yellow-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-3" onclick="login()">로그인</button>
+                </div>
+                <div>
+                    <button class="bg-yellow-100 hover:bg-yellow-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2" onclick="openclose()">회원등록</button>
+                </div>
+            </div>
         </div>
         <div id = "post-box" class="section has-text-centered">
-            <h1 class="title">회원가입 페이지</h1>
-            <div class = "container" style="width:60%">
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="usernick">이름(성명)</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="text" class="input" id="usernick" placeholder="이름(성함)을 입력해주세요.">
-                            </div>
-                        </div>
-                    </div>
+            <h1 class="title">회원가입</h1>
+            <div class = "container" style="width:40%">
+                <div>
+                    <label for="usernick" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <input type="text" id="usernick" class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="이름(성함)을 입력해주세요." required>
                 </div>
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="user_id">아이디</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="text" class="input" id="user_id" aria-describedby="emailHelp"
-                                       placeholder="사용할 아이디를 입력해주세요.">
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <label for="user_id" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <input type="text" id="user_id" class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="사용할 아이디를 입력해주세요." required>
                 </div>
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="user_pw">비밀번호</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="password" class="input" id="user_pw" placeholder="사용할 비밀번호를 입력해주세요.">
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <label for="user_pw" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <input type="text" id="user_pw" class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="사용할 비밀번호를 입력해주세요." required>
                 </div>
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label" for="user_pw_chk">비밀번호 확인</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input type="password" class="input" id="user_pw_chk" placeholder="비밀번호 확인을 위해 다시 비밀번호를 입력해주세요.">
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <label for="user_pw_chk" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <input type="text" id="user_pw_chk" class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="비밀번호 확인을 위해 다시 한번 입력해주세요." required>
                 </div>
-                <button class="button is-primary" onclick="register()">회원가입 및 자동 로그인</button>
+                <button class="bg-yellow-100 hover:bg-yellow-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-3" onclick="register()">회원가입 및 자동 로그인</button>
             </div>
         </div>
     </body>
