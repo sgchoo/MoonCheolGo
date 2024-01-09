@@ -44,9 +44,9 @@ def api_register():
        user_info = db.user.find_one({"id": payload['id']} , {"point": payload['point']})
        return render_template('index.html', nickname=user_info['nickname'], point = user_info['point'])
    except jwt.ExpiredSignatureError:   
-       return redirect(url_for("api_login", msg = "로그인 시간이 만료되었습니다."))
+       return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
-        return redirect(url_for("api_login", msg = "로그인 정보가 존재하지 않습니다."))
+        return redirect(url_for("login", msg = "로그인 정보가 존재하지 않습니다."))
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
@@ -77,9 +77,9 @@ def home():
        user_info = db.user.find_one({"id": payload['id']})
        return render_template('index.html', nickname = user_info['nickname'], point = user_info['point'])
    except jwt.ExpiredSignatureError:   
-       return redirect(url_for("api_login", msg = "로그인 시간이 만료되었습니다."))
+       return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
-        return redirect(url_for("api_login", msg = "로그인 정보가 존재하지 않습니다."))
+        return redirect(url_for("login", msg = "로그인 정보가 존재하지 않습니다."))
 
 @app.route('/api/nickname', methods=['GET'])
 def api_valid():
