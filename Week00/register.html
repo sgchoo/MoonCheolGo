@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>문철고 | 로그인 페이지</title>
+    </head>
+    <body>
+        <!-- 다양한 언어를 사용할 수 있도록 UTF-8 을 사용하도록 합니다. -->
+        <meta charset="UTF-8"/>
+
+        <!-- 반응형으로 동작하게 합니다. -->
+        <meta title="viewport" content="width=device-width, initial-scale=1.0"/>
+        <script>
+            //이름, 아이디, (비밀번호, 비밀번호 확인)을 받아 DB에 저장한다
+            function register()
+            {
+                $.ajax
+                ({
+                    type: 'POST',
+                    url: '/api/register',
+                    data: 
+                    {
+                        idGive: $('userId').val(),
+                        passwordGive: $('userPassword').val(),
+                        confirmPasswordGive: $('userConfirmPassword').val(),
+                    },
+
+                    success: function (response)
+                    {
+                        if(response['result'] == 'success')
+                        {
+                            alert('문철고 회원이 되신걸 환영합니다')
+                            window.location.href = '/main'
+                        }
+                        else
+                        {
+                            alert(response['msg'])
+                        }
+                    }
+                })
+            }
+        </script>
+
+    </body>
+</html>
