@@ -14,11 +14,22 @@ db = client.dbjungle
 def api_register():
    id = request.form['id']
    pw = request.form['pw']
+   pw_chk = request.form['pw_chk']
    nickname = request.form['nickname']
-   pwhash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
-   db.user.insert_one({'id': id, 'pw': pwhash, 'nickname': nickname})
-
-   return jsonify({'result': 'success'})
+   if pw != pw_chk:
+       return jsonify({'result': 'fail', 'msg': '비밀번호가 일치하지 않습니다.'})
+   if (pw == '' or id == '') and nickname != '':
+       return jsonify({'result': 'fail', 'msg': '아이디/비밀번호를 입력해주세요.'})
+   if nickname == '' and (pw != '' and id != ''):
+       return jsonify({'result': 'fail', 'msg': '이름(성명)을 입력해주세요.'})
+   if nickname == '' or pw == '' or id == '':
+       return jsonify({'result': 'fail', 'msg': '아무것도 입력하지 않으셨습니다.'})
+   if db.user.find_one({'id': id}) is not None:
+        return jsonify({'result': 'fail', 'msg': '이미 존재하는 아이디입니다.'})
+   if pw == pw_chk:
+       pwhash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
+       db.user.insert_one({'id': id, 'pw': pwhash, 'nickname': nickname})
+       return jsonify({'result': 'success'})
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
