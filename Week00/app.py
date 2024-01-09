@@ -20,11 +20,11 @@ def apply_moonchul():
     moonchuls = {'subject': subject_receive, 'argument': argument_receive,
                  'position1': position_1_receive, 'position2': position_2_receive}
     db.moonchuls.insert_one(moonchuls)
-    print(moonchuls)
+    #print(moonchuls)
 
     return jsonify({'result': 'success'})
 
-@app.route('/post', methods=['GET'])
+@app.route('/main', methods=['GET'])
 def read_moonchuls():
     # find_one 대신 find를 사용하여 모든 문서를 가져오도록 수정
     result = list(db.moonchuls.find())
