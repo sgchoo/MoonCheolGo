@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta title="viewport" content="width=device-width, initial-scale=1.0"/>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            crossorigin="anonymous"></script>
+
+
+        <script>
+            let isProceeding = true;
+            $(document).ready(function()
+            {
+                showMoonchuls();
+            });
+
+            function OpenClose()
+            {
+                let status = $('#apply-box').css('display')
+                if(status == 'block')
+                {
+                    $('#apply-box').hide()
+                }
+                else
+                {
+                    $('#apply-box').show()
+                }
+            }
+
+            function applyMoonchul()
+            {
+                let subject = $("#subject").val();
+                let argument = $("#argument").val();
+                let position_1 =$("#position-1").val();
+                let position_2 =$("#position-2").val();
+
+                $.ajax
+                ({
+                    type: "POST",
+                    url: "/main",
+                    data: {subject_give: subject, argument_give: argument, position_1_give: position_1, position_2_give: position_2},
+                    success:function(response)
+                    {
+                        if(response["result"] == 'success')
+                        {
+                            alert("문철이 등록되었습니다.")
+                            window.location.reload();
+                        }
+                        else
+                        {
+                            alert("등록에 실패하였습니다.")
+                        }
+                    }
+                })
+            }
+
+            function makeMoonchul(subject)
+            {
+                let tempHtml = `<p><button>${subject}</button></p>`;
+                $("#moonchuls").append(tempHtml);
+            }
+
+            function showMoonchuls()
+            {
+
+                $.ajax({
+                    type: "GET",
+                    url: "/show",
+                    data: {is_proceeding: isProceeding},
+                    success: function (response) {
+                        let moonchuls = response["moonchuls"];
+                        $("#moonchuls").empty();
+                        for (let i = 0; i < moonchuls.length; i++) 
+                        {
+                                makeMoonchul(moonchuls[i]['subject']);
+                        }
+                        
+                        
+                    }
+                })
+            }
+            function proceedingMode()
+            {
+                showMoonchuls();
+            }
+
+            function resultMode()
+            {
+                isProceeding = false;
+                showMoonchuls();
+            }
+            
+        </script>
+
+    </head>
+    <body>
+        <a onclick="OpenClose()" id="btn-apply-box" class="btn btn-primary btn-lg" role="button">문철신청하기</a>
+        <div class = "applyBox" id="apply-box">
+            <label for="subject"> 제목</label><input id="subject">
+            <label for="argument"> 논점</label><input id="argument">
+            <label for="position-1"> 입장1</label><input id="position-1">
+            <label for="position-2"> 입장2</label><input id="position-2">
+            <button type="submit" onclick="applyMoonchul()">제출하기</button>
+        </div>
+        <div class="moonchulButton">
+            <a href = "#" onclick = "ProceedingMode()" id = "proceeding">진행중</a>
+            <a href = "#" onclick = "ResultMode()" id = "result">결과</a> 
+        </div>
+        <div id="moonchuls">
+
+        </div>
+    </body>
+</html>
