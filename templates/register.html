@@ -23,10 +23,9 @@
                     type: "POST",
                     url: "/api/register",
                     data: {
-                        id_give: $('#userid').val(),
-                        pw_give: $('#userpw').val(),
-                        nickname_give: $('#usernick').val()
-                        //pointGive : $('#userPoint').val(100)
+                        id: $('#userid').val(),
+                        pw: $('#userpw').val(),
+                        nickname: $('#usernick').val()
                     },
                     success: function (response) {
                         if (response['result'] == 'success') {
