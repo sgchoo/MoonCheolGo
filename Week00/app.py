@@ -3,14 +3,8 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-import requests
-
-from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client.dbmoonchul
-
-db.moonchuls.insert_one({'subject': "짜장면vs짬뽕", 'argument': "짬뽕짜장면",
-              'position1': "짬뽕", 'position2': "짜장면"})
 
 @app.route('/')
 def home():
@@ -24,7 +18,7 @@ def apply_moonchul():
     position_2_receive = request.form['position_2_give']
 
     moonchuls = {'subject': subject_receive, 'argument': argument_receive,
-              'position1': position_1_receive, 'position2': position_2_receive}
+                 'position1': position_1_receive, 'position2': position_2_receive}
     db.moonchuls.insert_one(moonchuls)
     print(moonchuls)
 
@@ -32,8 +26,13 @@ def apply_moonchul():
 
 @app.route('/post', methods=['GET'])
 def read_moonchuls():
-        result = list(db.moonchuls.find_one({'subject'}))
-        return jsonify({'result':'success','subjects':result})
+    # find_one 대신 find를 사용하여 모든 문서를 가져오도록 수정
+    result = list(db.moonchuls.find())
+    
+    # 모든 문서의 'subject' 필드를 가져오도록 수정
+    subjects = [item['subject'] for item in result]
+
+    return jsonify({'result': 'success', 'subjects': subjects})
 
 if __name__ == '__main__':
-     app.run('0,0,0,0', port = 5000, debug = True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
