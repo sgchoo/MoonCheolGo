@@ -42,7 +42,7 @@ def api_register():
    try:
        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
        user_info = db.user.find_one({"id": payload['id']} , {"point": payload['point']})
-       return render_template('index.html', nickname=user_info['nickname'], point = user_info['point'])
+       return render_template('main.html', nickname=user_info['nickname'], point = user_info['point'])
    except jwt.ExpiredSignatureError:   
        return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
@@ -75,7 +75,7 @@ def home():
    try:
        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
        user_info = db.user.find_one({"id": payload['id']})
-       return render_template('index.html', nickname = user_info['nickname'], point = user_info['point'])
+       return render_template('main.html', nickname = user_info['nickname'], point = user_info['point'])
    except jwt.ExpiredSignatureError:   
        return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
