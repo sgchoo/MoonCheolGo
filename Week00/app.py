@@ -16,7 +16,7 @@ def apply_moonchul():
     argument_receive = request.form['argument_give']
     position_1_receive = request.form['position_1_give']
     position_2_receive = request.form['position_2_give']
-    db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 'argument': argument_receive, 'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True'})
+    db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 'argument': argument_receive, 'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True', 'vote1': 0, 'vote2': 0})
     return jsonify({'result': 'success'})
 
 
@@ -30,6 +30,16 @@ def show_proceeding_moonchuls():
 def show_result_moonchuls():
     result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
+
+@app.route("/vote/update", methods=['POST'])
+def updateVoteCount():
+    findData = request.form['id']
+    voteCount = db.moonchuls.find_one({'argument': findData})
+    plusCount = voteCount['vote1'] + 1
+    
+    db.moonchuls.update_one({'argument': findData}, {'$set': {'vote1': plusCount}})
+    
+    return jsonify({'result': 'success'})
 
 
 
