@@ -19,11 +19,11 @@
         </style>
 
         <script>
+            let isProceeding = true;
             $(document).ready(function()
             {
-                $("#moonchuls").html("");
-                showMoonchuls();
-            })
+                ProceedingMode()
+            });
 
             function OpenClose()
             {
@@ -37,9 +37,11 @@
                     $('#apply-box').show()
                 }
             }
+
             function applyMoonchul()
             {
-                let subject = $("#subject").val();
+                let subject_1 = $("#subject1").val();
+                let subject_2 = $("#subject2").val();
                 let argument = $("#argument").val();
                 let position_1 =$("#position-1").val();
                 let position_2 =$("#position-2").val();
@@ -48,7 +50,7 @@
                 ({
                     type: "POST",
                     url: "/main",
-                    data: {subject_give: subject, argument_give: argument, position_1_give: position_1, position_2_give: position_2},
+                    data: {subject_1_give: subject_1, subject_2_give: subject_2, argument_give: argument, position_1_give: position_1, position_2_give: position_2},
                     success:function(response)
                     {
                         if(response["result"] == 'success')
@@ -64,31 +66,48 @@
                 })
             }
 
-            function makeMoonchul(subject)
+            function makeMoonchul(subject1,subject2)
             {
-                let tempHtml = `<p><button>${subject}</button></p>`;
+                let tempHtml = `<p><button>${subject1}</button><button>${subject2}</button></p>`;
                 $("#moonchuls").append(tempHtml);
             }
 
-            function showMoonchuls()
+            function showMoonchuls(isProceeding)
             {
-                $.ajax
-                ({
+                $("#moonchuls").empty();
+                if(isProceeding == true)
+                {
+                    $.ajax({
                     type: "GET",
-                    url: "/main",
+                    url: "/show/proceeding",
                     data: {},
-                    success: function(response)
-                    {
-                        let moonchuls = response["moonchuls"];
-                        //console.log(moonchuls);
-                        for(let i = 0; i < moonchuls.length; i++)
-                        {
-                            makeMoonchul(moonchuls[i]["subject"]);
-                        }
-                        //console.log("거쳤다")
-                    }
+                    success: function (response) {
+                            let moonchuls = response["moonchuls"];
 
-                })
+                            for (let i = 0; i < moonchuls.length; i++) 
+                            {
+                                makeMoonchul(moonchuls[i]['subject1'],moonchuls[i]['subject2']);
+                            }
+                        },
+                    })
+                }
+                else
+                {
+                    console.log("asdf")
+                    $.ajax({
+                        type: "GET",
+                        url: "/show/result",
+                        data: {},
+                        success: function(response) {
+                            let moonchuls = response["moonchuls"];
+                            for(let i =0; i< moonchuls.length; i++)
+                            {
+                                makeMoonchul(moonchuls[i]['subject1'],moonchuls[i]['subject2']);
+                            }
+                        },
+                    })
+                }
+                
             }
             
             function ProceedingMode()
@@ -107,7 +126,7 @@
             <div class="flex items-center justify-center">
                 <h1 class="mt-8 text-4xl font-bold">문철</h1>
             </div>
-            <div class="flex items-center justify-center">
+            <div class="flex items-center justify-center mt-6">
                 <button class="bg-yellow-100 hover:bg-yellow-200 font-medium rounded-lg text-sm px-5 py-2.5 mt-3" onclick="OpenClose()" id="btn-apply-box">문철 신청하기</button>
             </div>
         </div>
@@ -135,9 +154,17 @@
             </div>
         </div>
 
-        <div class="moonchulButton md:container mx-auto bg-red-200" style="width:40%">
-            <a href = "#" onclick = "ProceedingMode()" id = "proceeding">진행중</a>
-            <a href = "#" onclick = "ResultMode()" id = "result">결과</a>
+        <hr class="border-t border-gray-500 h-6 m-0 mt-8">
+
+        <div class="moonchulButton md:container mx-auto flex justify-around items-center h-full mt-8" style="width:60%">
+            <!-- <a href="#" onclick="ProceedingMode()" id="proceeding" class="text-white">진행중</a> -->
+            <!-- <a href="#" onclick="ResultMode()" id="result" class="text-white">결과</a> -->
+            <a href="#" onclick="ProceedingMode()" id="proceeding" class="flex-1 px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 flex items-center justify-center">
+                투표 진행 중
+            </a>
+            <a href="#" onclick="ResultMode()" id="result" class="flex-1 px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 flex items-center justify-center">
+                투표 결과
+            </a>
         </div>
     </body>
 </html>
