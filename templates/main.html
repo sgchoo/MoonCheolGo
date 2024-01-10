@@ -23,17 +23,31 @@
         alert('로그아웃!')
         window.location.href='/login'
       }
-
+    </script>
+    <script>
+      function deleteuser() {
+        $.ajax({
+          type: "POST",
+          url: "/api/notuser",
+          data: {},
+          success: function (response) {
+              alert('포인트가 없는 회원은 규정위반이라 간주하고 데이터 말소')
+              window.location.reload()
+          }
+        });
+      }
     </script>
 
   </head>
   <body>
     <p>
-      <h1 class="title">로그인하고 5초 동안만 볼 수 있는 페이지입니다.</h1>
+      <h1 class="title">로그인하고 10분 동안만 볼 수 있는 페이지입니다.</h1>
       <h1 class="subtitle">계속 새로고침 해보세요</h1>
-      <h1 class="subtitle">{{point}}</h1>
     </p>
+    <div id="showpoint"></div>
     <h5 class="subtitle">나의 닉네임은: {{nickname}}</h5>
+    <h5 class="subtitle">나의 포인트는: {{point}}</h5>
     <button class="button is-danger" onclick="logout()">로그아웃하기</button>
+    <button class="button is-delete" onclick="deleteuser()">포인트가 없거나 0인 유저 삭제</button>
   </body>
 </html>
