@@ -120,7 +120,7 @@ def apply_moonchul():
     db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 
                              'argument': argument_receive, 'position1': position_1_receive, 
                              'position2': position_2_receive, 'isProceeding': 'True' ,
-                             'vote1': 0, 'vote2': 0, 'Post_log': [] , 'usedApoint': 0, 'usedBpoint': 0})
+                             'vote1': 0, 'vote2': 0})
     return jsonify({'result': 'success' , 'subject1': subject_1_receive,
                     'subject2': subject_2_receive, 'argument': argument_receive, 
                     'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True',
@@ -139,97 +139,81 @@ def show_result_moonchuls():
 
 @app.route("/vote/update", methods=['POST'])
 def updateVoteCount():
-    findData = request.form['id']
     idElement = ''
     voteElement = ''
     plusCount = 0
     
+    findData = request.form['id']
     
-    voteCount = db.moonchuls.find_one({'subject1': findData})
-    if voteCount == None:
-        voteCount = db.moonchuls.find_one({'subject2': findData})
-        idElement = 'subject2'
+    voteCount = db.moonchuls.find_one({'position1': findData})
+    
+    
+    if voteCount is None:
+        voteCount = db.moonchuls.find_one({'position2': findData})
+        idElement = 'position2'
     else:
-        idElement = 'subject1'
+        idElement = 'position1'
     
-    if idElement == 'subject1':
+    if idElement is 'position1':
         plusCount = voteCount['vote1'] + 1
         voteElement = 'vote1'
         
-    elif idElement == 'subject2':
+    elif idElement is 'position2':
         plusCount = voteCount['vote2'] + 1
         voteElement = 'vote2'
         
-    
     db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
-    return jsonify({'result': 'success', 'msg': '투표 집계가 완료되었습니다.'})
+    
+    
+    return jsonify({'result': 'success'})
 
-@app.route('/api/point', methods=['POST'])
-def api_point():
-    _id = request.values.get("_id")
-    A = db.moonchul.find_one({'Post_log': _id , 'userApoint' : True})
-    B = db.moonchul.find_one({'Post_log': _id , 'userBpoint' : True})
-    if A is None and B is None:
-        A = 0
-        B = 0
-    elif A is None and B is not None:
-        A = 0
-        B = 100
-    elif A is not None and B is None:     
-        A = 100
-        B = 0
-    else:
-        A = int((A/(A+B))*100)
-        B = 100 - A
-    return jsonify({'result': 'success', 'A': A , 'B': B})
+# @app.route('/api/allpoint', methods=['POST'])
+# def api_vote():
+#     token_receive = request.cookies.get('mytoken')
+#     _id = request.values.get("_id")
 
-@app.route('/api/allpoint', methods=['POST'])
-def api_vote():
-    token_receive = request.cookies.get('mytoken')
-    _id = request.values.get("_id")
-
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_info = db.user.find_one({"id": payload['id']})
-        point = int(user_info['point'])
-        usedApoint = request.form['usedApoint']
-        usedBpoint = request.form['usedBpoint']
-        if request.form['usedApoint'] == '':
-            usedApoint = 0
-            usedBpoint = int(usedBpoint)
-        elif request.form['usedBpoint'] == '':
-            usedBpoint = 0
-            usedApoint = int(usedApoint)
-        else:
-            pass
-        usedpoint = int(usedApoint) + int(usedBpoint)
-        if user_info:
-            post_ids = user_info.get('post_id', [])
-            if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
-                return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다. 중복 투표는 불가합니다.'})
-            else:
-                db.user.update_one({"id": payload['id']}, {"$set": {"point": int(point) - int(usedpoint)}, "$push": {"post_id": _id}})
-            if db.moonchuls.find_one({"Post_log": _id}) is None and int(usedApoint) != 0:
-                db.moonchuls.insert_one({"Post_log": _id, "usedApoint": int(usedApoint) + int(usedpoint)})
-            elif db.moonchuls.find_one({"Post_log": _id}) is None and int(usedBpoint) != 0:
-                db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": int(usedBpoint) + int(usedpoint)})
-            elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedApoint) != 0:
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": int(usedApoint) + usedpoint}})
-            elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedBpoint) != 0:
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": int(usedBpoint) + usedpoint}})
-            else:
-                return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
-        elif user_info is None:
-            return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
-        elif point - usedpoint < 0:
-            return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
-        else:
-            return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
-    except jwt.ExpiredSignatureError:
-        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
-    except jwt.exceptions.DecodeError:
-        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+#     try:
+#         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+#         user_info = db.user.find_one({"id": payload['id']})
+#         point = int(user_info['point'])
+#         usedApoint = request.form['usedApoint']
+#         usedBpoint = request.form['usedBpoint']
+#         if request.form['usedApoint'] == '':
+#             usedApoint = 0
+#             usedBpoint = int(usedBpoint)
+#         elif request.form['usedBpoint'] == '':
+#             usedBpoint = 0
+#             usedApoint = int(usedApoint)
+#         else:
+#             pass
+#         usedpoint = int(usedApoint) + int(usedBpoint)
+#         if user_info:
+#             post_ids = user_info.get('post_id', [])
+#             if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
+#                 return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다. 중복 투표는 불가합니다.'})
+#             else:
+#                 db.user.update_one({"id": payload['id']}, {"$set": {"point": int(point) - int(usedpoint)}, "$push": {"post_id": _id}})
+#             if db.moonchuls.find_one({"Post_log": _id}) is None and int(usedApoint) != 0:
+#                 db.moonchuls.insert_one({"Post_log": _id, "usedApoint": int(usedApoint) + int(usedpoint)})
+#             elif db.moonchuls.find_one({"Post_log": _id}) is None and int(usedBpoint) != 0:
+#                 db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": int(usedBpoint) + int(usedpoint)})
+#             elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedApoint) != 0:
+#                 db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": int(usedApoint) + usedpoint}})
+#             elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedBpoint) != 0:
+#                 db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": int(usedBpoint) + usedpoint}})
+#             else:
+#                 return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
+#             return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
+#         elif user_info is None:
+#             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
+#         elif point - usedpoint < 0:
+#             return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
+#         else:
+#             return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
+#     except jwt.ExpiredSignatureError:
+#         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+#     except jwt.exceptions.DecodeError:
+#         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
     
 
 if __name__ == '__main__':
