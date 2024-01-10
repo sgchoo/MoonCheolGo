@@ -61,36 +61,52 @@
                 $("#moonchuls").append(tempHtml);
             }
 
-            function showMoonchuls()
+            function showMoonchuls(isProceeding)
             {
-
-                $.ajax({
+                $("#moonchuls").empty();
+                if(isProceeding == true)
+                {
+                    $.ajax({
                     type: "GET",
-                    url: "/show",
-                    data: {is_proceeding: isProceeding},
+                    url: "/show/proceeding",
+                    data: {},
                     success: function (response) {
-                        let moonchuls = response["moonchuls"];
-                        $("#moonchuls").empty();
-                        for (let i = 0; i < moonchuls.length; i++) 
-                        {
+                            let moonchuls = response["moonchuls"];
+
+                            for (let i = 0; i < moonchuls.length; i++) 
+                            {
                                 makeMoonchul(moonchuls[i]['subject']);
-                        }
-                        
-                        
-                    }
-                })
-            }
-            function proceedingMode()
-            {
-                showMoonchuls();
+                            }
+                        },
+                    })
+                }
+                else
+                {
+                    $.ajax({
+                        type: "GET",
+                        url: "/show/result",
+                        data: {},
+                        success: function(response) {
+                            let moonchuls = response["moonchuls"];
+                            for(let i =0; i< moonchuls.length; i++)
+                            {
+                                makeMoonchul(moonchuls[i]['subject']);
+                            }
+                        },
+                    })
+                }
+                
             }
 
-            function resultMode()
+            function ProceedingMode()
             {
-                isProceeding = false;
-                showMoonchuls();
+                showMoonchuls(true);
             }
-            
+            function ResultMode()
+            {
+                showMoonchuls(false);
+            }
+
         </script>
 
     </head>
