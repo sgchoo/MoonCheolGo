@@ -196,8 +196,10 @@ def api_vote():
         usedBpoint = request.form['usedBpoint']
         if request.form['usedApoint'] == '':
             usedApoint = 0
+            usedBpoint = int(usedBpoint)
         elif request.form['usedBpoint'] == '':
             usedBpoint = 0
+            usedApoint = int(usedApoint)
         else:
             pass
         usedpoint = int(usedApoint) + int(usedBpoint)
@@ -206,15 +208,17 @@ def api_vote():
             if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
                 return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다. 중복 투표는 불가합니다.'})
             else:
-                db.user.update_one({"id": payload['id']}, {"$set": {"point": int(point) - int(usedpoint)}})
-                db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
+                db.user.update_one({"id": payload['id']}, {"$set": {"point": int(point) - int(usedpoint)}, "$push": {"post_id": _id}})
             if db.moonchuls.find_one({"Post_log": _id}) is None and int(usedApoint) != 0:
                 db.moonchuls.insert_one({"Post_log": _id, "usedApoint": int(usedApoint) + int(usedpoint)})
             elif db.moonchuls.find_one({"Post_log": _id}) is None and int(usedBpoint) != 0:
                 db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": int(usedBpoint) + int(usedpoint)})
-            else:
+            elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedApoint) != 0:
                 db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": int(usedApoint) + usedpoint}})
+            elif db.moonchuls.find_one({"Post_log": _id}) is not None and int(usedBpoint) != 0:
                 db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": int(usedBpoint) + usedpoint}})
+            else:
+                return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
             return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
         elif user_info is None:
             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})

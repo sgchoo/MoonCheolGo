@@ -9,16 +9,19 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <!-- Bulma CSS -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
-        
         <!-- Tailwind CSS  -->
         <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 
-
+        <style>
+            #post-box
+            {
+                display: none;
+            }
+        </style>
 
         <script>
             // ['쿠키'라는 개념에 대해 알아봅시다]
@@ -40,7 +43,7 @@
                             window.location.href = '/'
                         } else {
                             // 로그인이 안되면 에러메시지를 띄웁니다.
-                            alert('로그인에 실패하였습니다.  ' + response['msg'])
+                            alert(response['msg'])
                         }
                     }
                 })
