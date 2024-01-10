@@ -65,7 +65,8 @@ def api_login():
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
         return jsonify({'result': 'success', 'token': token , 'msg': '로그인을 완료하였습니다.'})
-    
+    elif db.user.find_one({'id': id}) is None:
+        return jsonify({'result': 'fail', 'msg': '사용 가능한 아이디입니다. 회원가입 해 주세요.'})
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -89,25 +90,7 @@ def home():
    try:
        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
        user_info = db.user.find_one({"id": payload['id']})
-       _id = request.values.get("_id")
-       A_origin = db.mooncheolA.find_one({'Post_log': _id })
-       B_origin = db.mooncheolB.find_one({'Post_log': _id })
-       if A_origin is None and B_origin is None:
-              Apercent = 0
-              Bpercent = 0
-       elif A_origin is None and B_origin is not None:
-                Apercent = 0
-                Bpercent = 100
-       elif A_origin is not None and B_origin is None:     
-                    Apercent = 100
-                    Bpercent = 0
-       else:
-                    A = A_origin['Bpoint']
-                    B = B_origin['Bpoint']
-                    Apercent = float((A/(A+B))*100)
-                    Bpercent = 100 - Apercent
-       return render_template('main.html', nickname = user_info['nickname'] , point = user_info['point'],
-                              Apercent = Apercent, Bpercent = Bpercent)
+       return render_template('main.html', nickname = user_info['nickname'] , point = user_info['point'])
    except jwt.ExpiredSignatureError:   
        return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
@@ -137,7 +120,7 @@ def apply_moonchul():
     db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 
                              'argument': argument_receive, 'position1': position_1_receive, 
                              'position2': position_2_receive, 'isProceeding': 'True' ,
-                             'vote1': 0, 'vote2': 0, 'Post_log': [], 'Apoint': 0 , 'Bpoint': 0})
+                             'vote1': 0, 'vote2': 0, 'Post_log': [] , 'usedApoint': 0, 'usedBpoint': 0})
     return jsonify({'result': 'success' , 'subject1': subject_1_receive,
                     'subject2': subject_2_receive, 'argument': argument_receive, 
                     'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True',
@@ -181,16 +164,31 @@ def updateVoteCount():
     db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
     return jsonify({'result': 'success', 'msg': '투표 집계가 완료되었습니다.'})
 
-@app.route('/api/vote_A', methods=['POST'])
-def api_voteA():
+@app.route('/api/allpoint', methods=['POST'])
+def api_vote():
     token_receive = request.cookies.get('mytoken')
     _id = request.values.get("_id")
+    A = db.moonchul.find_one({'Post_log': _id , 'Apoint' : 1})
+    B = db.moonchul.find_one({'Post_log': _id , 'Bpoint' : 1})
+    if A is None and B is None:
+        A = 0
+        B = 0
+    elif A is None and B is not None:
+        A = 0
+        B = 100
+    elif A is not None and B is None:     
+        A = 100
+        B = 0
+    else:
+        A = int((A/(A+B))*100)
+        B = 100 - A
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.user.find_one({"id": payload['id']})
         point = int(user_info['point'])
-        usedpoint = int(request.form['usedpoint'])
-        Bpoint = 0
+        usedApoint = int(request.form['usedApoint'])
+        usedBpoint = int(request.form['usedBpoint'])
+        usedpoint = usedApoint + usedBpoint
         if user_info:
             post_ids = user_info.get('post_id', [])
             if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
@@ -199,44 +197,13 @@ def api_voteA():
                 db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
                 db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
             if db.moonchuls.find_one({"Post_log": _id}) is None:
-                db.moonchuls.insert_one({"Post_log": _id, "Bpoint": usedpoint})
+                db.moonchuls.insert_one({"Post_log": _id, "usedApoint": usedApoint + usedpoint})
+                db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": usedBpoint + usedpoint})
             else:
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
-        elif user_info is None:
-            return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
-        elif point - usedpoint < 0:
-            return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
-        else:
-            return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
-    except jwt.ExpiredSignatureError:
-        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
-    except jwt.exceptions.DecodeError:
-        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
-
-@app.route('/api/vote_B', methods=['POST'])
-def api_voteB():
-    token_receive = request.cookies.get('mytoken')
-    _id = request.values.get("_id")
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_info = db.user.find_one({"id": payload['id']})
-        point = int(user_info['point'])
-        usedpoint = int(request.form['usedpoint'])
-        Bpoint = 0
-        if user_info:
-            post_ids = user_info.get('post_id', [])
-            if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
-                return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다. 중복 투표는 불가합니다.'})
-            else:
-                db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
-                db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
-            if db.moonchuls.find_one({"Post_log": _id}) is None:
-                db.moonchuls.insert_one({"Post_log": _id, "Bpoint": 0})
-            else:
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
-
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": usedApoint + usedpoint}})
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": usedBpoint + usedpoint}}) 
+            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.' ,
+                            'A': A , 'B': B , 'point': point})
         elif user_info is None:
             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
         elif point - usedpoint < 0:
@@ -250,3 +217,20 @@ def api_voteB():
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5000, debug=True)
+
+
+# function point() {
+#         $.ajax({
+#             type: "POST",
+#             url: "/api/allpoint",
+#             data: {usedApoint: $('#position-1').val() , usedBpoint: $('#position-2').val() , _id : $('#argument').val()},
+#             success: function (response) {
+#                 if (response['result'] == 'success') {
+#                     alert(response['msg'])
+#                     window.location.reload()
+#                 } else {
+#                     alert(response['msg'])
+#                 }
+#             }
+#         })
+#     }
