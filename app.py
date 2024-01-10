@@ -94,13 +94,13 @@ def home():
    except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg = "로그인 정보가 존재하지 않습니다."))
    
-@app.route('/vote')
-def vote():
+@app.route('/vote/<mooncheol>')
+def vote(mooncheol):
    token_receive = request.cookies.get('mytoken')
    try:
        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
        user_info = db.user.find_one({"id": payload['id']})
-       return render_template('vote.html', nickname = user_info['nickname'], point = user_info['point'])
+       return render_template('vote.html', nickname = user_info['nickname'], point = user_info['point'], title = mooncheol)
    except jwt.ExpiredSignatureError:   
        return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
@@ -125,17 +125,24 @@ def api_voteA():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.user.find_one({"id": payload['id']})
-        point = user_info['point']
-        usedpoint = request.form['usedpoint']
-        title = request.form['title']
-        if db.user.find_one({'id': id}, {'title' : title}) is not None:
+        point = int(user_info['point'])
+        usedpoint = int(request.form['usedpoint'])
+        title = request.args.get("title")
+        Bpoint = 0
+        user_vote = db.user.find_one({'id': payload['id']}, {'title' : title})
+        if db.user.find_one({'id': payload['id']}) is None:
             return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다.'})
-        if point < 1:
+        elif point - usedpoint < 0:
             return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
         else:
             db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
             db.user.update_one({"id": payload['id']}, {"$push": {"title": title}})
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
+            if db.mooncheolA.find_one({"title": title}) is None:
+                db.mooncheolA.insert_one({"title": title, "Bpoint": 0})
+            else:
+                db.mooncheolA.update_one({"title": title}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
+            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.' ,
+                            'Bpoint' : Bpoint})
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
@@ -147,21 +154,37 @@ def api_voteB():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.user.find_one({"id": payload['id']})
-        point = user_info['point']
-        usedpoint = request.form['usedpoint']
-        title = request.form['title']
-        if db.user.find_one({'id': id}, {'title' : title}) is not None:
+        point = int(user_info['point'])
+        usedpoint = int(request.form['usedpoint'])
+        Bpoint = 0
+        title = request.args.get("title")
+        if db.user.find_one({'id': payload['id']}, {'title' : title}) is not None:
             return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다.'})
-        if point < 1:
+        elif point - usedpoint < 0:
             return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
         else:
             db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
             db.user.update_one({"id": payload['id']}, {"$push": {"title": title}})
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
+            if db.mooncheolB.find_one({"title": title}) is None:
+                db.mooncheolB.insert_one({"title": title, "Bpoint": 0})
+            else:
+                db.mooncheolB.update_one({"title": title}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
+            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.' ,
+                            'Bpoint' : Bpoint})
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+    
+@app.route('/api/vote_compare', methods=['POST'])
+def api_compare():
+    title = request.args.get("title")
+    Bpoint = 0
+    A = int(Bpoint + db.mooncheolA.find_one({'title': title},{'Bpoint': Bpoint}))
+    B = int(Bpoint + db.mooncheolB.find_one({'title': title},{'Bpoint': Bpoint}))
+    Apercent = float((A/(A+B))*100)
+    Bpercent = float((B/(A+B))*100)
+    return jsonify({'result': 'success', 'Apercent': Apercent, 'Bpercent': Bpercent})
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5000, debug=True)
