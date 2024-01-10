@@ -31,7 +31,10 @@ def show_result_moonchuls():
     result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
 
-
+@app.route("/show/detail")
+def show__detail():
+    result = list(db.moonchuls.find({}))
+    return jsonify({{'result': 'success', 'moonchuls': result}})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
