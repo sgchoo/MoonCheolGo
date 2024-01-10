@@ -56,7 +56,6 @@ def updateVoteCount():
         plusCount = voteCount['vote2'] + 1
         voteElement = 'vote2'
         
-    db.moonchuls.update_one({idElement: findData}, {'$set': {'isProceeding': False}})
     db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
     
     
