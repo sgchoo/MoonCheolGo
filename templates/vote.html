@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+    <head>
+
+        <!-- Webpage Title -->
+        <title>문철하기</title>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bulma CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <!-- JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+
+
+        <script>
+            function vote_A() {
+                $.ajax({
+                    type: "POST",
+                    url: "/api/vote_A",
+                    data: {usedpoint: $('#Bpoint').val() , title : $('#title').val()},
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert('투표 완료!')
+                            window.location.reload()
+                        } else {
+                            alert(response['msg'])
+                        }
+                    }
+                })
+            }
+        </script>
+        <script>
+            function vote_B() {
+                $.ajax({
+                    type: "POST",
+                    url: "/api/vote_B",
+                    data: {usedpoint: $('#Bpoint').val() , title : $('#title').val()},
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert('투표 완료!')
+                            window.location.reload()
+                        } else {
+                            alert(response['msg'])
+                        }
+                    }
+                })
+            }
+        </script>
+
+    </head>
+    <body>
+        <section class="section">
+            <div class="container">
+                <h1 class="title">
+                    문철하기
+                </h1>
+                <p class="subtitle">
+                    지금 투표해보세요!
+                </p>
+                <div class="field">
+                    <label class="label">{{title}}</label>
+                    <div class="control">
+                        <h3 class="input" type="text" id="title">
+                    </div>
+                <div class="imageA">
+                    <div class="field">
+                        <label class="label">A  {{Apercent}}</label>
+                        <div class="control">
+                            <input class="input" type="image" id="A">
+                        </div>
+                    </div>
+                <div class="imageB">
+                    <div class="field">
+                        <label class="label">B  {{Bpercent}}</label>
+                        <div class="control">
+                            <input class="input" type="image" id="A">
+                        </div>
+                        </div>
+                    <div class="field">
+                        <label class="label">투표 포인트</label>
+                        <div class="control">
+                            <input class="input" type="number" id="Bpoint" placeholder="투표 포인트를 입력하세요">
+                        </div>
+                    </div>
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button class="button is-link" onclick="vote_A()">A</button>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link" onclick="vote_B()">B</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>
