@@ -33,11 +33,30 @@ def show_result_moonchuls():
 
 @app.route("/vote/update", methods=['POST'])
 def updateVoteCount():
-    findData = request.form['id']
-    voteCount = db.moonchuls.find_one({'argument': findData})
-    plusCount = voteCount['vote1'] + 1
+    idElement = ''
+    voteElement = ''
+    plusCount = 0
     
-    db.moonchuls.update_one({'argument': findData}, {'$set': {'vote1': plusCount}})
+    findData = request.form['id']
+    
+    voteCount = db.moonchuls.find_one({'subject1': findData})
+    
+    if voteCount is None:
+        voteCount = db.moonchuls.find_one({'subject2': findData})
+        idElement = 'subject2'
+    else:
+        idElement = 'subject1'
+    
+    if idElement is 'subject1':
+        plusCount = voteCount['vote1'] + 1
+        voteElement = 'vote1'
+        
+    elif idElement is 'subject2':
+        plusCount = voteCount['vote2'] + 1
+        voteElement = 'vote2'
+        
+    
+    db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
     
     return jsonify({'result': 'success'})
 

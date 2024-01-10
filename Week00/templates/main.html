@@ -67,49 +67,18 @@
                 })
             }
 
-            function Temp(getId)
+            function UpdateVoteCount(getId)
             {
-                console.log(getId);
-                let count = 0;
-                let a, b, c;
-
-
                 $.ajax({
-                    type: "GET",
-                    url: "/show/proceeding",
-                    data: {},
+                    type: "POST",
+                    url: "/vote/update",
+                    data: { 'id': getId },
                     success: function (response) {
-                        let moonchuls = response["moonchuls"];
-
-                        for (let i = 0; i < moonchuls.length; i++)
-                        {
-                            if(moonchuls[i]['argument'] == getId)
-                            {
-                                //어케 구분을 할까?
-                                //버튼 내용이 들어올거임
-                                a = moonchuls[i]['subject1']
-                                b = moonchuls[i]['subject2']
-                                c = moonchuls[i]['vote1']
-                                $.ajax({
-                                    type: "POST",
-                                    url: "/vote/update", 
-                                    data: { 'id': getId },
-                                    success: function (response) {
-                                        if (response['result'] == 'success') {
-                                            window.location.reload()
-                                        }
-                                    }
-                                });
-                                break
-                            }
-
+                        if (response['result'] == 'success') {
+                            window.location.reload()
                         }
-                        console.log(a);
-                        console.log(b);
-                        console.log(c);
-                    },
-                })
-
+                    }
+                });
             }
 
             function makeMoonchul(subject1,subject2, temp)
@@ -123,7 +92,7 @@
                 let resultB = averageB.toFixed(2);
 
                 let tempHtml = `<div class="md:container mx-auto flex items-center  mb-8 shadow-lg" style="width:80%">
-                                    <button id=${temp} class="mx-auto w-full flex items-center" onclick="Temp(this.id)">
+                                    <button id="${subject2}" class="mx-auto w-full flex items-center" onclick="UpdateVoteCount(this.id)">
                                         <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-l-lg h-32 w-1/4 bg-blue-200">${subject1}</a>
                                         <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-r-lg-r h-32 w-3/4 bg-red-200">${subject2}</a>
                                     </button>
