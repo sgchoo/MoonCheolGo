@@ -39,19 +39,19 @@ def updateVoteCount():
     
     findData = request.form['id']
     
-    voteCount = db.moonchuls.find_one({'subject1': findData})
+    voteCount = db.moonchuls.find_one({'position1': findData})
     
     if voteCount is None:
-        voteCount = db.moonchuls.find_one({'subject2': findData})
-        idElement = 'subject2'
+        voteCount = db.moonchuls.find_one({'position2': findData})
+        idElement = 'position2'
     else:
-        idElement = 'subject1'
+        idElement = 'position1'
     
-    if idElement is 'subject1':
+    if idElement is 'position1':
         plusCount = voteCount['vote1'] + 1
         voteElement = 'vote1'
         
-    elif idElement is 'subject2':
+    elif idElement is 'position2':
         plusCount = voteCount['vote2'] + 1
         voteElement = 'vote2'
         

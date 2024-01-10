@@ -16,6 +16,9 @@
             {
                 display: none;
             }
+            .detail-box {
+                display: none;
+            }
         </style>
 
         <script>
@@ -35,6 +38,15 @@
                 else
                 {
                     $('#apply-box').show()
+                }
+            }
+
+            function CloseOpen(uniqueId) {
+                let status = $('#' + uniqueId).css('display');
+                if (status == 'block') {
+                    $('#' + uniqueId).hide();
+                } else {
+                    $('#' + uniqueId).show();
                 }
             }
 
@@ -81,7 +93,7 @@
                 });
             }
 
-            function makeMoonchul(subject1,subject2, temp)
+            function makeMoonchul(uniqueId, subject1, subject2, argument, position1, position2)
             {
                 let a = 2;
                 let b = 15;
@@ -90,6 +102,20 @@
                 let resultA = averageA.toFixed(2);
                 let averageB = (b/(a+b)*100);
                 let resultB = averageB.toFixed(2);
+
+                let realTemp = `<div class="md:container mx-auto flex items-center mt-3 shadow-lg bg-transparent" style="width:80%">
+                                    <button onclick="CloseOpen('${uniqueId}')" class="mx-auto w-full flex items-center">
+                                        <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-l-lg h-32 w-1/4 bg-blue-200">${subject1}</a>
+                                        <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-r-lg h-32 w-3/4 bg-red-200">${subject2}</a>
+                                    </button>
+                                </div>
+                                <div class="md:container mx-auto flex items-center mb-2 shadow-lg bg-yellow-200" style="width:80%">
+                                    <div id="${uniqueId}" class="detail-box">
+                                        <p class="mx-auto flex items-center">${argument}</p>
+                                        <button class="mx-auto flex-auto h-12 w-32 bg-green-300">${position1}</button>
+                                        <button class="mx-auto flex-auto h-12 w-32 bg-gray-700">${position2}</button>
+                                    </div>
+                                </div>`;
 
                 let tempHtml = `<div class="md:container mx-auto flex items-center  mb-8 shadow-lg" style="width:80%">
                                     <button id="${subject2}" class="mx-auto w-full flex items-center" onclick="UpdateVoteCount(this.id)">
@@ -105,44 +131,38 @@
                                     </button>
                                 </div>`;
 
-                $("#moonchuls").append(tempHtml);
+                $("#moonchuls").append(realTemp);
             }
 
-            function showMoonchuls(isProceeding)
-            {
+            function showMoonchuls(isProceeding) {
                 $("#moonchuls").empty();
-                if(isProceeding == true)
-                {
+                if (isProceeding == true) {
                     $.ajax({
-                    type: "GET",
-                    url: "/show/proceeding",
-                    data: {},
-                    success: function (response) {
+                        type: "GET",
+                        url: "/show/proceeding",
+                        data: {},
+                        success: function (response) {
                             let moonchuls = response["moonchuls"];
-
-                            for (let i = 0; i < moonchuls.length; i++)
-                            {
-                                makeMoonchul(moonchuls[i]['subject1'],moonchuls[i]['subject2'], moonchuls[i]['argument']);
+    
+                            for (let i = 0; i < moonchuls.length; i++) {
+                                makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2']);
                             }
                         },
                     })
-                }
-                else
-                {
+                } else {
                     $.ajax({
                         type: "GET",
                         url: "/show/result",
                         data: {},
-                        success: function(response) {
+                        success: function (response) {
                             let moonchuls = response["moonchuls"];
-                            for(let i =0; i< moonchuls.length; i++)
-                            {
-                                makeMoonchul(moonchuls[i]['subject1'],moonchuls[i]['subject2']);
+                            for (let i = 0; i < moonchuls.length; i++) {
+                                makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2']);
                             }
                         },
                     })
                 }
-                
+    
             }
             
             function ProceedingMode()
