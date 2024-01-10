@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 app = Flask(__name__)
 SECRET_KEY = 'THIS IS SECRET KEY'
 client = MongoClient('localhost', 27017)  # mongoDB는 27017 포트로 돌아갑니다.
-db = client.dbjungle   
+db = client.dbjungle  
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
@@ -89,7 +89,25 @@ def home():
    try:
        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
        user_info = db.user.find_one({"id": payload['id']})
-       return render_template('main.html', nickname = user_info['nickname'] , point = user_info['point'])
+       _id = request.values.get("_id")
+       A_origin = db.mooncheolA.find_one({'Post_log': _id })
+       B_origin = db.mooncheolB.find_one({'Post_log': _id })
+       if A_origin is None and B_origin is None:
+              Apercent = 0
+              Bpercent = 0
+       elif A_origin is None and B_origin is not None:
+                Apercent = 0
+                Bpercent = 100
+       elif A_origin is not None and B_origin is None:     
+                    Apercent = 100
+                    Bpercent = 0
+       else:
+                    A = A_origin['Bpoint']
+                    B = B_origin['Bpoint']
+                    Apercent = float((A/(A+B))*100)
+                    Bpercent = 100 - Apercent
+       return render_template('main.html', nickname = user_info['nickname'] , point = user_info['point'],
+                              Apercent = Apercent, Bpercent = Bpercent)
    except jwt.ExpiredSignatureError:   
        return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
    except jwt.exceptions.DecodeError:
@@ -115,14 +133,15 @@ def apply_moonchul():
     argument_receive = request.form['argument_give']
     position_1_receive = request.form['position_1_give']
     position_2_receive = request.form['position_2_give']
-    _id = str(ObjectId())
+
     db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 
                              'argument': argument_receive, 'position1': position_1_receive, 
-                             'position2': position_2_receive, 'isProceeding': 'True'})
+                             'position2': position_2_receive, 'isProceeding': 'True' ,
+                             'vote1': 0, 'vote2': 0, 'Post_log': [], 'Apoint': 0 , 'Bpoint': 0})
     return jsonify({'result': 'success' , 'subject1': subject_1_receive,
                     'subject2': subject_2_receive, 'argument': argument_receive, 
                     'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True',
-                    '_id': _id , 'msg': '정상적으로 등록되었습니다.'})
+                     'msg': '정상적으로 등록되었습니다.'})
 
 
 @app.route("/show/proceeding", methods=['GET'])
@@ -135,22 +154,33 @@ def show_result_moonchuls():
     result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
 
-@app.route('/vote' , methods=['GET'])
-def vote():
-   argument = request.values.get("argument")
-   A = request.values.get("subject_1_give")
-   B = request.values.get("subject_2_give")
-   token_receive = request.cookies.get('mytoken')
-   try:
-       payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-       user_info = db.user.find_one({"id": payload['id']})
-       return render_template('vote.html', nickname = user_info['nickname'], point = user_info['point'],
-                              argument = argument , A = A, B = B )
-   except jwt.ExpiredSignatureError:   
-       return redirect(url_for("login", msg = "로그인 시간이 만료되었습니다."))
-   except jwt.exceptions.DecodeError:
-        return redirect(url_for("login", msg = "로그인 정보가 존재하지 않습니다."))
+@app.route("/vote/update", methods=['POST'])
+def updateVoteCount():
+    findData = request.form['id']
+    idElement = ''
+    voteElement = ''
+    plusCount = 0
     
+    
+    voteCount = db.moonchuls.find_one({'subject1': findData})
+    if voteCount is None:
+        voteCount = db.moonchuls.find_one({'subject2': findData})
+        idElement = 'subject2'
+    else:
+        idElement = 'subject1'
+    
+    if idElement is 'subject1':
+        plusCount = voteCount['vote1'] + 1
+        voteElement = 'vote1'
+        
+    elif idElement is 'subject2':
+        plusCount = voteCount['vote2'] + 1
+        voteElement = 'vote2'
+        
+    
+    db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
+    return jsonify({'result': 'success', 'msg': '투표 집계가 완료되었습니다.'})
+
 @app.route('/api/vote_A', methods=['POST'])
 def api_voteA():
     token_receive = request.cookies.get('mytoken')
@@ -160,7 +190,6 @@ def api_voteA():
         user_info = db.user.find_one({"id": payload['id']})
         point = int(user_info['point'])
         usedpoint = int(request.form['usedpoint'])
-        opinion = request.values.get("argument_give")
         Bpoint = 0
         if user_info:
             post_ids = user_info.get('post_id', [])
@@ -169,10 +198,10 @@ def api_voteA():
             else:
                 db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
                 db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
-            if db.mooncheolA.find_one({"title": opinion}) is None:
-                db.mooncheolA.insert_one({"title": opinion, "Bpoint": 0})
+            if db.moonchuls.find_one({"Post_log": _id}) is None:
+                db.moonchuls.insert_one({"Post_log": _id, "Bpoint": usedpoint})
             else:
-                db.mooncheolA.update_one({"title": opinion}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
             return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
         elif user_info is None:
             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
@@ -194,7 +223,6 @@ def api_voteB():
         user_info = db.user.find_one({"id": payload['id']})
         point = int(user_info['point'])
         usedpoint = int(request.form['usedpoint'])
-        opinion = request.values.get("argument_give")
         Bpoint = 0
         if user_info:
             post_ids = user_info.get('post_id', [])
@@ -203,10 +231,11 @@ def api_voteB():
             else:
                 db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
                 db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
-            if db.mooncheolB.find_one({"title": opinion}) is None:
-                db.mooncheolB.insert_one({"title": opinion, "Bpoint": 0})
+            if db.moonchuls.find_one({"Post_log": _id}) is None:
+                db.moonchuls.insert_one({"Post_log": _id, "Bpoint": 0})
             else:
-                db.mooncheolB.update_one({"title": opinion}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"Bpoint": Bpoint + usedpoint}}) 
+
             return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
         elif user_info is None:
             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
@@ -214,30 +243,6 @@ def api_voteB():
             return jsonify({'result': 'fail', 'msg': '포인트가 부족합니다.'})
         else:
             return jsonify({'result': 'fail', 'msg': '투표 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'})
-    except jwt.ExpiredSignatureError:
-        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
-    except jwt.exceptions.DecodeError:
-        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
-
-
-@app.route('/api/vote_compare', methods=['POST'])
-def api_compare():
-    opinion = request.values.get("opinion")
-    Bpoint = 0
-    A = int(Bpoint + db.mooncheolA.find_one({'opinion': opinion},{'Bpoint': Bpoint}))
-    B = int(Bpoint + db.mooncheolB.find_one({'opinion': opinion},{'Bpoint': Bpoint}))
-    Apercent = float((A/(A+B))*100)
-    Bpercent = float((B/(A+B))*100)
-    return jsonify({'result': 'success', 'Apercent': Apercent, 'Bpercent': Bpercent})
-
-@app.route('/api/point', methods=['POST'])
-def api_point():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_info = db.user.find_one({"id": payload['id']})
-        point = int(user_info['point'])
-        return jsonify({'result': 'success', 'point': point})
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:

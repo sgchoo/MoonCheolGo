@@ -21,7 +21,7 @@
                 $.ajax({
                     type: "POST",
                     url: "/api/vote_A",
-                    data: {usedpoint: $('#Bpoint').val() , title : $('#title').val() , _id : $('#_id').val()},
+                    data: {usedpoint: $('#Bpoint').val() , _id : $('#_id').val()},
                     success: function (response) {
                         if (response['result'] == 'success') {
                             alert(response['msg'])
@@ -38,7 +38,7 @@
                 $.ajax({
                     type: "POST",
                     url: "/api/vote_B",
-                    data: {usedpoint: $('#Bpoint').val() , title : $('#title').val() , _id : $('#_id').val()},
+                    data: {usedpoint: $('#Bpoint').val() , _id : $('#_id').val()},
                     success: function (response) {
                         if (response['result'] == 'success') {
                             alert(response['msg'])
@@ -62,20 +62,20 @@
                     지금 투표해보세요!
                 </p>
                 <div class="field">
-                    <label class="label">{{opinion}}</label>
+                    <label class="label">title</label>
                     <div class="control">
                         <input class="input" type="test" id="_id" , placeholder="_id를 입력하세요.">
                     </div>
                 <div class="imageA">
                     <div class="field">
-                        <label class="label">{{A}}  {{Apercent}}</label>
+                        <label class="label">A  {{Apercent}}</label>
                         <div class="control">
                             <input class="input" type="image" id="A" >
                         </div>
                     </div>
                 <div class="imageB">
                     <div class="field">
-                        <label class="label">{{B}}  {{Bpercent}}</label>
+                        <label class="label">B  {{Bpercent}}</label>
                         <div class="control">
                             <input class="input" type="image" id="B">
                         </div>
