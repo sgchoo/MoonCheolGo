@@ -28,7 +28,7 @@ def show_proceeding_moonchuls():
 
 @app.route("/show/result", methods=['GET'])
 def show_result_moonchuls():
-    result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
+    result = list(db.moonchuls.find({'isProceeding': False},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
 
 @app.route("/vote/update", methods=['POST'])
@@ -40,6 +40,7 @@ def updateVoteCount():
     findData = request.form['id']
     
     voteCount = db.moonchuls.find_one({'position1': findData})
+    
     
     if voteCount is None:
         voteCount = db.moonchuls.find_one({'position2': findData})
@@ -55,8 +56,9 @@ def updateVoteCount():
         plusCount = voteCount['vote2'] + 1
         voteElement = 'vote2'
         
-    
+    db.moonchuls.update_one({idElement: findData}, {'$set': {'isProceeding': False}})
     db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
+    
     
     return jsonify({'result': 'success'})
 
