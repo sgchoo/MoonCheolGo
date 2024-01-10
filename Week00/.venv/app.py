@@ -20,14 +20,15 @@ def apply_moonchul():
 
 
 @app.route("/show/proceeding", methods=['GET'])
-def show_moonchuls():
+def show_proceeding_moonchuls():
     result = list(db.moonchuls.find({'isProceeding': 'True'},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
 
-# @app.route("/show/result", methods=['GET'])
-# def show_moonchuls():
-#     result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
-#     return jsonify({'result': 'success', 'moonchuls': result})
+
+@app.route("/show/result", methods=['GET'])
+def show_result_moonchuls():
+    result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
+    return jsonify({'result': 'success', 'moonchuls': result})
 
 
 
