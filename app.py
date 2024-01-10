@@ -137,6 +137,15 @@ def show_result_moonchuls():
     result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
     return jsonify({'result': 'success', 'moonchuls': result})
 
+@app.route('/tog', methods=['POST'])
+def toggle_moonchul():
+    subject1 = request.form['subject1']
+
+    # 해당 문서의 'isProceeding' 값을 False로 업데이트
+    db.moonchuls.update_one({'subject1': subject1}, {'$set': {'isProceeding': 'False'}})
+
+    return jsonify({'result': 'success', 'message': 'Toggle successful'})
+
 @app.route("/vote/update", methods=['POST'])
 def updateVoteCount():
     idElement = ''
@@ -166,6 +175,9 @@ def updateVoteCount():
     
     
     return jsonify({'result': 'success'})
+
+if __name__ == '__main__':
+    app.run('0.0.0.0', port=5000, debug=True)
 
 # @app.route('/api/allpoint', methods=['POST'])
 # def api_vote():
