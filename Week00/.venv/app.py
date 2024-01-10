@@ -11,11 +11,12 @@ def home():
 
 @app.route('/main', methods=['POST'])
 def apply_moonchul():
-    subject_receive = request.form['subject_give']
+    subject_1_receive = request.form['subject_1_give']
+    subject_2_receive = request.form['subject_2_give']
     argument_receive = request.form['argument_give']
     position_1_receive = request.form['position_1_give']
     position_2_receive = request.form['position_2_give']
-    db.moonchuls.insert_one({'subject': subject_receive, 'argument': argument_receive, 'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True'})
+    db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 'argument': argument_receive, 'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True'})
     return jsonify({'result': 'success'})
 
 
