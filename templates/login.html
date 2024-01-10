@@ -11,7 +11,7 @@
 
         <!-- Tailwind CSS  -->
         <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-        
+
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
@@ -94,16 +94,16 @@
             <h1 class="text-4xl font-bold">Login</h1>
             <div class="mt-2 md:container mx-auto" style="width:40%">
                 <div>
-                    <label for="userid" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <!-- <label for="userid" class="block mb-2 text-l font-bold text-gray-900"></label> -->
                     <input type="text" id="userid"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
-                        placeholder="My ID" required>
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm  mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
+                        placeholder="아이디" required>
                 </div>
                 <div>
-                    <label for="userpw" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <!-- <label for="userpw" class="block mb-2 text-sl font-bold text-gray-900"></label> -->
                     <input type="password" id="userpw"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
-                        placeholder="My Password" required>
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm  mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
+                        placeholder="비밀번호" required>
                 </div>
                 <div>
                     <button
@@ -112,41 +112,41 @@
                 </div>
                 <div>
                     <button
-                        class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2"
+                        class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2 shadow-lg"
                         onclick="openclose()">회원가입</button>
                 </div>
             </div>
         </div>
     
-        <div id="post-box" class="section text-center">
-            <h1 class="text-4xl font-bold">Register</h1>
+        <div id="post-box" class="section text-center mt-8">
+            <h1 class="text-4xl font-bold">회원가입 진행</h1>
             <div class="md:container mx-auto" style="width:40%">
                 <div>
-                    <label for="usernick" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <!-- <label for="usernick" class="block mb-2 text-l font-bold text-gray-900"></label> -->
                     <input type="text" id="usernick"
-                        class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
                         placeholder="이름(성함)을 입력해주세요." required>
                 </div>
                 <div>
-                    <label for="user_id" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <!-- <label for="user_id" class="block mb-2 text-sl font-bold text-gray-900"></label> -->
                     <input type="text" id="user_id"
-                        class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
                         placeholder="사용할 아이디를 입력해주세요." required>
                 </div>
                 <div>
-                    <label for="user_pw" class="block mb-2 text-l font-bold text-gray-900"></label>
+                    <!-- <label for="user_pw" class="block mb-2 text-l font-bold text-gray-900"></label> -->
                     <input type="password" id="user_pw"
-                        class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
                         placeholder="사용할 비밀번호를 입력해주세요." required>
                 </div>
                 <div>
-                    <label for="user_pw_chk" class="block mb-2 text-sl font-bold text-gray-900"></label>
+                    <!-- <label for="user_pw_chk" class="block mb-2 text-sl font-bold text-gray-900"></label> -->
                     <input type="password" id="user_pw_chk"
-                        class="bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm mt-3 rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block w-full p-2.5 placeholder-gray-400"
                         placeholder="비밀번호 확인을 위해 다시 한번 입력해주세요." required>
                 </div>
                 <button
-                    class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-3"
+                    class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-3 shadow-lg"
                     onclick="register()">회원가입 및 자동 로그인</button>
             </div>
         </div>
