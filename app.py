@@ -146,17 +146,17 @@ def updateVoteCount():
     
     
     voteCount = db.moonchuls.find_one({'subject1': findData})
-    if voteCount is None:
+    if voteCount == None:
         voteCount = db.moonchuls.find_one({'subject2': findData})
         idElement = 'subject2'
     else:
         idElement = 'subject1'
     
-    if idElement is 'subject1':
+    if idElement == 'subject1':
         plusCount = voteCount['vote1'] + 1
         voteElement = 'vote1'
         
-    elif idElement is 'subject2':
+    elif idElement == 'subject2':
         plusCount = voteCount['vote2'] + 1
         voteElement = 'vote2'
         
@@ -164,12 +164,11 @@ def updateVoteCount():
     db.moonchuls.update_one({idElement: findData}, {'$set': {voteElement: plusCount}})
     return jsonify({'result': 'success', 'msg': '투표 집계가 완료되었습니다.'})
 
-@app.route('/api/allpoint', methods=['POST'])
-def api_vote():
-    token_receive = request.cookies.get('mytoken')
+@app.route('/api/point', methods=['POST'])
+def api_point():
     _id = request.values.get("_id")
-    A = db.moonchul.find_one({'Post_log': _id , 'Apoint' : 1})
-    B = db.moonchul.find_one({'Post_log': _id , 'Bpoint' : 1})
+    A = db.moonchul.find_one({'Post_log': _id , 'userApoint' : True})
+    B = db.moonchul.find_one({'Post_log': _id , 'userBpoint' : True})
     if A is None and B is None:
         A = 0
         B = 0
@@ -182,28 +181,41 @@ def api_vote():
     else:
         A = int((A/(A+B))*100)
         B = 100 - A
+    return jsonify({'result': 'success', 'A': A , 'B': B})
+
+@app.route('/api/allpoint', methods=['POST'])
+def api_vote():
+    token_receive = request.cookies.get('mytoken')
+    _id = request.values.get("_id")
+
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.user.find_one({"id": payload['id']})
         point = int(user_info['point'])
-        usedApoint = int(request.form['usedApoint'])
-        usedBpoint = int(request.form['usedBpoint'])
-        usedpoint = usedApoint + usedBpoint
+        usedApoint = request.form['usedApoint']
+        usedBpoint = request.form['usedBpoint']
+        if request.form['usedApoint'] == '':
+            usedApoint = 0
+        elif request.form['usedBpoint'] == '':
+            usedBpoint = 0
+        else:
+            pass
+        usedpoint = int(usedApoint) + int(usedBpoint)
         if user_info:
             post_ids = user_info.get('post_id', [])
             if _id in post_ids:  # '특정 값'이 post_ids 리스트 안에 있는지 확인
                 return jsonify({'result': 'fail', 'msg': '이미 동일한 이름의 투표에 투표하셨습니다. 중복 투표는 불가합니다.'})
             else:
-                db.user.update_one({"id": payload['id']}, {"$set": {"point": point - usedpoint}})
+                db.user.update_one({"id": payload['id']}, {"$set": {"point": int(point) - int(usedpoint)}})
                 db.user.update_one({"id": payload['id']}, {"$push": {"post_id": _id}})
-            if db.moonchuls.find_one({"Post_log": _id}) is None:
-                db.moonchuls.insert_one({"Post_log": _id, "usedApoint": usedApoint + usedpoint})
-                db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": usedBpoint + usedpoint})
+            if db.moonchuls.find_one({"Post_log": _id}) is None and int(usedApoint) != 0:
+                db.moonchuls.insert_one({"Post_log": _id, "usedApoint": int(usedApoint) + int(usedpoint)})
+            elif db.moonchuls.find_one({"Post_log": _id}) is None and int(usedBpoint) != 0:
+                db.moonchuls.insert_one({"Post_log": _id, "usedBpoint": int(usedBpoint) + int(usedpoint)})
             else:
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": usedApoint + usedpoint}})
-                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": usedBpoint + usedpoint}}) 
-            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.' ,
-                            'A': A , 'B': B , 'point': point})
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedApoint": int(usedApoint) + usedpoint}})
+                db.moonchuls.update_one({"Post_log": _id}, {"$set": {"usedBpoint": int(usedBpoint) + usedpoint}})
+            return jsonify({'result': 'success', 'msg': '정상적으로 결과가 반영되었으며 포인트가 차감되었습니다.'})
         elif user_info is None:
             return jsonify({'result': 'fail', 'msg': '사용자가 존재하지 않습니다. 다시 로그인해주세요.'})
         elif point - usedpoint < 0:
@@ -214,10 +226,17 @@ def api_vote():
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+    
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5000, debug=True)
 
+
+#    moonchuls_info = db.moonchuls.find_one({"argument": 1})
+#    _id = request.values.get("_id")
+#    if moonchuls_info:
+#        post_db = moonchuls_info.get('Post_log', [])
+#        if _id in post_db:  # '특정 값'이 post_db 리스트 안에 있는지 확인
 
 # function point() {
 #         $.ajax({
