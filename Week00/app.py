@@ -2,7 +2,6 @@ from flask import Flask, render_template, jsonify, request
 from pymongo import MongoClient
 
 app = Flask(__name__)
-
 client = MongoClient('localhost', 27017)
 db = client.dbmoonchul
 
@@ -12,27 +11,28 @@ def home():
 
 @app.route('/main', methods=['POST'])
 def apply_moonchul():
-    subject_receive = request.form['subject_give']
+    subject_1_receive = request.form['subject_1_give']
+    subject_2_receive = request.form['subject_2_give']
     argument_receive = request.form['argument_give']
     position_1_receive = request.form['position_1_give']
     position_2_receive = request.form['position_2_give']
-
-    moonchuls = {'subject': subject_receive, 'argument': argument_receive,
-                 'position1': position_1_receive, 'position2': position_2_receive}
-    db.moonchuls.insert_one(moonchuls)
-    #print(moonchuls)
-
+    db.moonchuls.insert_one({'subject1': subject_1_receive,'subject2': subject_2_receive, 'argument': argument_receive, 'position1': position_1_receive, 'position2': position_2_receive, 'isProceeding': 'True'})
     return jsonify({'result': 'success'})
 
-@app.route('/main', methods=['GET'])
-def read_moonchuls():
-    # find_one 대신 find를 사용하여 모든 문서를 가져오도록 수정
-    result = list(db.moonchuls.find())
-    
-    # 모든 문서의 'subject' 필드를 가져오도록 수정
-    subjects = [item['subject'] for item in result]
 
-    return jsonify({'result': 'success', 'subjects': subjects})
+@app.route("/show/proceeding", methods=['GET'])
+def show_proceeding_moonchuls():
+    result = list(db.moonchuls.find({'isProceeding': 'True'},{'_id':0}))
+    return jsonify({'result': 'success', 'moonchuls': result})
+
+
+@app.route("/show/result", methods=['GET'])
+def show_result_moonchuls():
+    result = list(db.moonchuls.find({'isProceeding': 'False'},{'_id':0}))
+    return jsonify({'result': 'success', 'moonchuls': result})
+
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run('0.0.0.0', port=5000, debug=True)
+    
