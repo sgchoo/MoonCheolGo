@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta title="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <!-- Tailwind CSS  -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            crossorigin="anonymous"></script>
+
+        <style>
+            #apply-box
+            {
+                display: none;
+            }
+            .detail-box {
+                display: none;
+            }
+
+            .timer {
+                margin-top: 10px;
+                color: blue;
+                font-weight: bold;
+            }
+        </style>
+
+        <script>
+            let isProceeding = true;
+            let timers = {};
+            $(document).ready(function()
+            {
+                ProceedingMode()
+            });
+
+            function OpenClose()
+            {
+                let status = $('#apply-box').css('display')
+                if(status == 'block')
+                {
+                    $('#apply-box').hide()
+                }
+                else
+                {
+                    $('#apply-box').show()
+                }
+            }
+
+            function CloseOpen(uniqueId) {
+                let status = $('#' + uniqueId).css('display');
+                if (status == 'block') {
+                    $('#' + uniqueId).hide();
+                } else {
+                    $('#' + uniqueId).show();
+                }
+            }
+
+            function applyMoonchul()
+            {
+                let subject_1 = $("#subject1").val();
+                let subject_2 = $("#subject2").val();
+                let argument = $("#argument").val();
+                let position_1 =$("#position-1").val();
+                let position_2 =$("#position-2").val();
+
+                $.ajax
+                ({
+                    type: "POST",
+                    url: "/main",
+                    data: {subject_1_give: subject_1, subject_2_give: subject_2, argument_give: argument, position_1_give: position_1, position_2_give: position_2},
+                    success:function(response)
+                    {
+                        if(response["result"] == 'success')
+                        {
+                            alert("문철이 등록되었습니다.")
+                            
+                            // 수정된 부분: 현재 시간을 사용하여 남은 시간 계산
+                        let now = Date.now();
+                        let timerEndTime = now + 12000; // 10분 타이머 (60초 * 10 * 1000 밀리초)
+                        
+                        // 타이머 생성
+                        createTimer(subject_1, subject_2, timerEndTime);
+
+                        // 입력값 초기화
+                        $("#subject1, #subject2, #argument, #position-1, #position-2").val('');
+
+                        // 신청창 닫기
+                        $('#apply-box').hide();
+
+                        // 페이지 리로드 없이 문철 표시 갱신
+                        showMoonchuls(isProceeding);
+                        }
+                        else
+                        {
+                            alert("등록에 실패하였습니다.")
+                        }
+                    }
+                })
+            }
+
+            function UpdateVoteCount(getId)
+            {
+                $.ajax({
+                    type: "POST",
+                    url: "/vote/update",
+                    data: { 'id': getId },
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            window.location.reload()
+                        }
+                    }
+                });
+            }
+            
+            function createTimer(subject1, subject2, timerEndTime) {
+    let timerId = setInterval(function () {
+        let now = Date.now();
+        let remainingTime = timerEndTime - now;
+
+        if (remainingTime <= 0) {
+            clearInterval(timerId);
+            $(`#timer-${subject1}-${subject2}`).text(`투표 종료`);
+            delete timers[`${subject1}_${subject2}`];
+            saveTimersToLocalStorage();
+
+            // 타이머 종료 시 서버에 알림
+            $.ajax({
+                type: "POST",
+                url: "/tog",
+                data: { subject1: subject1 },
+                success: function (response) {
+                    if (response.result === 'success') {
+                        console.log('서버 토글 성공');
+                    } else {
+                        console.error('서버 토글 실패:', response.message);
+                    }
+                },
+                error: function (error) {
+                    console.error('토글 요청 중 에러 발생:', error);
+                }
+            });
+
+        } else {
+            let minutes = Math.floor(remainingTime / 60000);
+            let seconds = Math.floor((remainingTime % 60000) / 1000);
+            let timerText = `투표 종료까지: ${minutes}분 ${seconds}초 `;
+            $(`#timer-${subject1}-${subject2}`).text(timerText);
+        }
+    }, 1000);
+
+    timers[`${subject1}_${subject2}`] = { id: timerId, endTime: timerEndTime };
+    saveTimersToLocalStorage();
+}
+        function showMoonchuls(isProceeding) {
+            $("#moonchuls").empty();
+            if (isProceeding == true) {
+                $.ajax({
+                    type: "GET",
+                    url: "/show/proceeding",
+                    data: {},
+                    success: function (response) {
+                        let moonchuls = response["moonchuls"];
+
+                        for (let i = 0; i < moonchuls.length; i++) {
+                            makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2']);
+                        }
+                    },
+                })
+            } else {
+                $.ajax({
+                    type: "GET",
+                    url: "/show/result",
+                    data: {},
+                    success: function (response) {
+                        let moonchuls = response["moonchuls"];
+                        for (let i = 0; i < moonchuls.length; i++) {
+                            makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2']);
+                        }
+                    },
+                })
+            }
+        }
+        function DetailMode() {
+            showDetail();
+        }
+
+        function ProceedingMode() {
+            // 페이지 로드 시 저장된 타이머 정보 로드
+            loadTimersFromLocalStorage();
+            showMoonchuls(true);
+        }
+
+        function ResultMode() {
+            showMoonchuls(false);
+        }
+
+            function makeMoonchul(uniqueId, subject1, subject2, argument, position1, position2, isProceeding, firstVoteCnt, secondVoteCnt)
+            {
+                let aVote = firstVoteCnt;
+                let bVote = secondVoteCnt;
+
+                let averageA = (aVote / (aVote + bVote)*100);
+                let resultA = averageA.toFixed(2);
+                let averageB = (bVote / (aVote + bVote)*100);
+                let resultB = averageB.toFixed(2);
+                
+                let proceedigHtml = `<div class="md:container mx-auto flex items-center mt-3 shadow-lg" style="width:80%">
+                                        <button onclick="CloseOpen('${uniqueId}')" class="mx-auto w-full flex items-center">
+                                            <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-l-lg h-32 w-1 bg-blue-200">${subject1}</a>
+                                            <a class="flex-grow flex-shrink-0 flex items-center justify-center rounded-r-lg-r h-32 w-0 bg-red-200">${subject2}</a>
+                                        </button>
+                                    </div>
+                                    <div class="md:container mx-auto flex items-center mb-2 shadow-lg" style="width:80%">
+                                        <div id="${uniqueId}" class="detail-box mx-auto">
+                                            <div>
+                                                <p class="h-32 text-center mt-8">${argument}</p>
+                                                <p class="timer" id="timer-${subject1}-${subject2}"></p>
+                                            </div>
+                                            <div class="mx-auto flex items-center">
+                                                <button id="${position1}" onclick="UpdateVoteCount(this.id)" class="text-sm w-56 h-auto px-4 py-2 bg-amber-100 rounded-lg shadow-md">${position1}</button>
+                                                <button id="${position2}" onclick="UpdateVoteCount(this.id)" class="text-sm w-56 h-auto px-4 py-2 bg-amber-100 rounded-lg shadow-md">${position2}</button>
+                                            </div>
+                                        </div>
+                                    </div>`;
+
+                let resultHtml = `<div class="md:container mx-auto flex items-center rounded-md mb-8 shadow-lg" style="width:80%">
+                                    <button class="mx-auto w-full flex items-center">
+                                        <span class="flex items-center justify-center rounded-l-lg bg-blue-200 h-32" style="flex-grow:${aVote}">${subject1}(${resultA}%)</span>
+                                        <span class="flex items-center justify-center rounded-r-lg bg-red-200 h-32" style="flex-grow:${bVote}">${subject2}(${resultB}%)</span>
+                                    </button>
+                                </div>`;
+                
+                if(isProceeding)
+                {
+                    $("#moonchuls").append(proceedigHtml);
+                }
+                else
+                {
+                    $("#moonchuls").append(resultHtml);
+                }
+            }
+
+            function showMoonchuls(isProceeding) {
+                $("#moonchuls").empty();
+                if (isProceeding == true) {
+                    $.ajax({
+                        type: "GET",
+                        url: "/show/proceeding",
+                        data: {},
+                        success: function (response) {
+                            let moonchuls = response["moonchuls"];
+    
+                            for (let i = 0; i < moonchuls.length; i++) {
+                                makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2'], isProceeding, moonchuls[i]['vote1'], moonchuls[i]['vote2']);
+                            }
+                        },
+                    })
+                } else {
+                    $.ajax({
+                        type: "GET",
+                        url: "/show/result",
+                        data: {},
+                        success: function (response) {
+                            let moonchuls = response["moonchuls"];
+                            for (let i = 0; i < moonchuls.length; i++) {
+                                makeMoonchul(`detail-box-${i}`, moonchuls[i]['subject1'], moonchuls[i]['subject2'], moonchuls[i]['argument'], moonchuls[i]['position1'], moonchuls[i]['position2'], isProceeding, moonchuls[i]['vote1'], moonchuls[i]['vote2']);
+                            }
+                        },
+                    })
+                }
+    
+            }
+            function loadTimersFromLocalStorage() {
+            // 로컬 스토리지에서 타이머 정보를 로드
+            let storedTimers = localStorage.getItem('timers');
+            if (storedTimers) {
+                timers = JSON.parse(storedTimers);
+
+                // 저장된 타이머 정보를 기반으로 타이머 생성
+                for (let timerKey in timers) {
+                    let [subject1, subject2] = timerKey.split('_');
+
+                    // 수정된 부분: 현재 시간을 사용하여 남은 시간 계산
+                    let now = Date.now();
+                    let remainingTime = timers[timerKey].endTime - now;
+                    createTimer(subject1, subject2, timers[timerKey].endTime);
+                }
+            }
+        }
+
+        function saveTimersToLocalStorage() {
+            // 로컬 스토리지에 타이머 정보 저장
+            localStorage.setItem('timers', JSON.stringify(timers));
+        }
+            function ProceedingMode()
+            {
+                showMoonchuls(true);
+            }
+            function ResultMode()
+            {
+                showMoonchuls(false);
+            }
+        </script>
+
+    </head>
+    <body>
+        <div class="md:container mx-auto">
+            <div class="flex items-center justify-center">
+                <h1 class="mt-8 text-4xl font-bold">문철</h1>
+            </div>
+            <div class="flex items-center justify-center mt-6">
+                <button class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm px-5 py-2.5 mt-3 shadow-lg" onclick="OpenClose()" id="btn-apply-box">문철 신청하기</button>
+            </div>
+        </div>
+        
+        <div class="md:container mx-auto applyBox" id="apply-box" style="width:40%">
+            <p>
+                <label for="subject1" class="mb-2 text-l font-bold text-gray-900">키워드</label>
+                <input type="text" id="subject1" class="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 w-full placeholder-gray-400" placeholder="논점 키워드를 입력해주세요." required>
+                <input type="text" id="subject2" class="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 w-full placeholder-gray-400" placeholder="논점 키워드를 입력해주세요." required>
+            </p>
+            <p>
+                <label for="argument" class="mb-2 text-l font-bold text-gray-900">내용</label>
+                <textarea id="argument" name="argument" rows="4" class="p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-yellow-400 focus:border-yellow-400 placeholder-gray-400" placeholder="자세한 설명을 적어주세요."></textarea>
+            </p>
+            <p>
+                <label for="position-1" class="mb-2 text-l font-bold text-gray-900">입장1</label>
+                <textarea id="position-1" name="position-1" rows="4" class="p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-yellow-400 focus:border-yellow-400 placeholder-gray-400" placeholder="입장1"></textarea>
+            </p>
+            <p>
+                <label for="position-2" class="mb-2 text-l font-bold text-gray-900">입장2</label>
+                <textarea id="position-2" name="position-2" rows="4" class="p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-yellow-400 focus:border-yellow-400 placeholder-gray-400" placeholder="입장2"></textarea>
+            </p>
+            <div class="flex items-center justify-center">
+                <button type="submit" class="bg-amber-100 hover:bg-amber-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3 shadow-lg" onclick="applyMoonchul()">제출하기</button>
+            </div>
+        </div>
+
+        <hr class="border-t border-gray-500 h-6 m-0 mt-8">
+
+        <div class="moonchulButton md:container mx-auto flex justify-around items-center h-full mt-8" style="width:60%">
+            <a href="#" onclick="ProceedingMode()" id="proceeding" class="flex-1 px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 flex items-center justify-center">
+                투표 진행 중
+            </a>
+            <a href="#" onclick="ResultMode()" id="result" class="flex-1 px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 flex items-center justify-center">
+                투표 결과
+            </a>
+        </div>
+
+        <div id="moonchuls" class="mt-8">
+
+        </div>
+        <script>
+            // 페이지 로드 시 저장된 타이머 정보 로드
+            loadTimersFromLocalStorage();
+        </script>
+    </body>
+</html>
